@@ -1,0 +1,15 @@
+# Python virtual environment
+venv
+
+# Python package cache
+__pycache__
+
+# Test files
+.env
+bot.py
+*.json
+
+# Build files
+build
+dist
+*.egg-info

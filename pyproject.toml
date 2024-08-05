@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nonebot-plugin-deer-pipe"
+version = "0.0.1"
+authors = [
+  { name="SNRainiar", email="rainiar@foxmail.com" },
+]
+description = "A deer-pipe attendance nonebot2 plugin"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: AGPL-3 License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "Pillow",
+  "nonebot-plugin-alconna",
+  "nonebot_plugin_userinfo"
+]
+
+[project.urls]
+Homepage = "https://github.com/SamuNatsu/nonebot-plugin-deer-pipe"
+Issues = "https://github.com/SamuNatsu/nonebot-plugin-deer-pipe/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+nonebot_plugin_deer_pipe = ["*.png", "*.jpg", "*.ttf"]
