@@ -5,10 +5,14 @@ import secrets
 
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
-from nonebot.plugin import PluginMetadata
-from nonebot_plugin_alconna import UniMessage, on_alconna
-from nonebot_plugin_userinfo import EventUserInfo, UserInfo
+from nonebot.plugin import PluginMetadata, require
 from typing import Any, Sequence
+
+require("nonebot_plugin_alconna")
+from nonebot_plugin_alconna import UniMessage, on_alconna
+
+require("nonebot_plugin_userinfo")
+from nonebot_plugin_userinfo import EventUserInfo, UserInfo
 
 # Plugin meta
 __plugin_meta__: PluginMetadata = PluginMetadata(
