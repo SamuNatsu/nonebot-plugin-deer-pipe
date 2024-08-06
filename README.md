@@ -1,7 +1,5 @@
 <div align="center">
-  <a href="https://v2.nonebot.dev/store"><img src="./assets/logo.jpg" width="180" height="180" alt="NoneBotPluginLogo"></a>
-  <br>
-  <p><img src="./assets/NoneBotPlugin.svg" width="240" alt="NoneBotPluginText"></p>
+  <a href="https://v2.nonebot.dev/store"><img src="./nonebot_plugin_deer_pipe/deerpipe.jpg" width="180" height="180" alt="NoneBotPluginLogo"></a>
 </div>
 
 <div align="center">
