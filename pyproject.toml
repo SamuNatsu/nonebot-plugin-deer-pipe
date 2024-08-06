@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nonebot-plugin-deer-pipe"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="SNRainiar", email="rainiar@foxmail.com" },
 ]
@@ -19,6 +19,7 @@ classifiers = [
 dependencies = [
   "Pillow",
   "nonebot2",
+  "nonebot-adapter-onebot",
   "nonebot-plugin-alconna",
   "nonebot_plugin_userinfo"
 ]
