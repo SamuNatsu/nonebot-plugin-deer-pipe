@@ -33,4 +33,4 @@ Issues = "https://github.com/SamuNatsu/nonebot-plugin-deer-pipe/issues"
 where = ["."]
 
 [tool.setuptools.package-data]
-nonebot_plugin_deer_pipe = ["*.png", "*.jpg", "*.ttf"]
+nonebot_plugin_deer_pipe = ["assets/*"]
