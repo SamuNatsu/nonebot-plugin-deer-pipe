@@ -4,7 +4,7 @@ import os
 from .contants import USERDATA_PATH
 from .image import generate_image
 from datetime import datetime
-from nonebot.plugin import PluginMetadata, require
+from nonebot.plugin import PluginMetadata, inherit_supported_adapters, require
 from typing import Any, Sequence
 
 require("nonebot_plugin_alconna")
@@ -20,19 +20,9 @@ __plugin_meta__: PluginMetadata = PluginMetadata(
   usage="发送🦌以进行签到",
   type="application",
   homepage="https://github.com/SamuNatsu/nonebot-plugin-deer-pipe",
-  supported_adapters={
-    "~console",
-    "~discord",
-    "~dodo",
-    "~feishu",
-    "~kaiheila",
-    "~onebot.v11",
-    "~onebot.v12",
-    "~qq",
-    "~red",
-    "~satori",
-    "~telegram",
-    }
+  supported_adapters=inherit_supported_adapters(
+    "nonebot_plugin_alconna", "nonebot_plugin_user"
+  )
 )
 
 # Attendance
