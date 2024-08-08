@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-deer-pipe"
-version = "0.1.1"
+version = "0.1.2"
 description = "A deer-pipe attendance nonebot2 plugin"
 authors = [
     {name = "SNRainiar", email = "rainiar@foxmail.com"},
@@ -14,6 +14,15 @@ dependencies = [
 requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "AGPL-3.0-or-later"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/SamuNatsu/nonebot-plugin-deer-pipe"
+Issues = "https://github.com/SamuNatsu/nonebot-plugin-deer-pipe/issues"
 
 [build-system]
 requires = ["pdm-backend"]
