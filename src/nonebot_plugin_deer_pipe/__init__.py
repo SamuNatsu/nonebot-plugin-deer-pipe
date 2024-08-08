@@ -21,7 +21,7 @@ __plugin_meta__: PluginMetadata = PluginMetadata(
   type="application",
   homepage="https://github.com/SamuNatsu/nonebot-plugin-deer-pipe",
   supported_adapters=inherit_supported_adapters(
-    "nonebot_plugin_alconna", "nonebot_plugin_user"
+    "nonebot_plugin_alconna", "nonebot_plugin_userinfo"
   )
 )
 
