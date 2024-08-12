@@ -1,4 +1,4 @@
-from .contants import DATABASE_URL
+from .constants import DATABASE_URL
 
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
