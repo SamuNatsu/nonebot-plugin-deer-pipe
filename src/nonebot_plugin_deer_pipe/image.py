@@ -26,7 +26,10 @@ def generate_image(
             x0: int = day_idx * BOX_W
             y0: int = (week_idx + 1) * BOX_H
             if day != 0:
-                img.paste(DEERPIPE_IMG if img_name == "deer" else WATER_IMG, (x0, y0))
+                img.paste(
+                    DEERPIPE_IMG if img_name == "deer" else WATER_IMG,
+                    (x0, y0),
+                )
                 drw.text(
                     (x0 + 5, y0 + BOX_H - 35), str(day), fill="black", font=MISANS_FONT
                 )
