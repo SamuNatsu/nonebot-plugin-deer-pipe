@@ -37,6 +37,7 @@ async def handle(user_info: UserInfo = EventUserInfo()) -> None:
 
   now: datetime = datetime.now()
   ok, deer = await attend(now, user_info.user_id)
+  print(deer)
   img: bytes = generate_image(now, name, deer)
 
   await UniMessage.text(

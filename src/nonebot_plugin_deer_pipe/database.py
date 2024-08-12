@@ -19,13 +19,13 @@ engin: AsyncEngine = create_async_engine(DATABASE_URL)
 initialized: bool = False
 
 # Attendance
-def get_seq(mask: str) -> list[int]:
+def get_seq(mask: int) -> list[int]:
   return list(
     map(
       lambda x: x[0] + 1,
       filter(
         lambda x: x[1] == '1',
-        enumerate(mask)
+        enumerate(bin(mask)[2:][::-1])
       )
     )
   )
@@ -45,7 +45,7 @@ async def attend(now: datetime, user_id: str) -> tuple[bool, Sequence[int]]:
     
     mask: int = int(user.mask)
     if (mask >> (now.day - 1)) & 1 == 1:
-      return (False, get_seq(user.mask))
+      return (False, get_seq(mask))
     else:
       mask |= (1 << (now.day - 1))
       user.mask = str(mask)
@@ -53,4 +53,4 @@ async def attend(now: datetime, user_id: str) -> tuple[bool, Sequence[int]]:
       session.add(user)
       await session.commit()
 
-      return (True, get_seq(str(mask)))
+      return (True, get_seq(mask))
