@@ -17,12 +17,10 @@ ASSETS_PATH: Path = PLUGIN_PATH / "assets"
 # Images
 CHECK_IMG: ImageFile = Image.open(ASSETS_PATH / "check@96x100.png")
 DEERPIPE_IMG: ImageFile = Image.open(ASSETS_PATH / "deerpipe@100x82.png")
+WATER_IMG: ImageFile = Image.open(ASSETS_PATH / "waterspray@100x82.png")
 
 # Fonts
-MISANS_FONT: FreeTypeFont = ImageFont.truetype(
-  ASSETS_PATH / "MiSans-Regular.ttf",
-  25
-)
+MISANS_FONT: FreeTypeFont = ImageFont.truetype(ASSETS_PATH / "MiSans-Regular.ttf", 25)
 
 # Database
 DATABASE_PATH: Path = store.get_plugin_data_file("userdata.db")
