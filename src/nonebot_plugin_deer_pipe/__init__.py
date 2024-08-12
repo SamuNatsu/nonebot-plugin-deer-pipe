@@ -44,7 +44,7 @@ async def handle(user_info: UserInfo = EventUserInfo()) -> None:
     ).send()
 
 
-@deer_matcher.handle()
+@water_matcher.handle()
 async def handle(user_info: UserInfo = EventUserInfo()) -> None:
     name: str = (
         user_info.user_remark or user_info.user_displayname or user_info.user_name
