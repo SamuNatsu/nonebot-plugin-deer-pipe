@@ -3,6 +3,7 @@ import os
 import secrets
 
 from .contants import CHECK_IMG, DEERPIPE_IMG, MISANS_FONT, PLUGIN_PATH
+
 from PIL import Image, ImageDraw
 from datetime import datetime
 from pathlib import Path

@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-deer-pipe"
-version = "0.1.4"
+version = "0.2.0"
 description = "A deer-pipe attendance nonebot2 plugin"
 authors = [
     {name = "SNRainiar", email = "rainiar@foxmail.com"},
@@ -10,6 +10,8 @@ dependencies = [
     "nonebot-plugin-alconna>=0.51.1",
     "nonebot-plugin-localstore>=0.7.1",
     "nonebot-plugin-userinfo>=0.2.5",
+    "sqlmodel>=0.0.21",
+    "aiosqlite>=0.20.0",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
@@ -33,7 +35,7 @@ build-backend = "pdm.backend"
 distribution = true
 
 [tool.pdm.dev-dependencies]
-test = [
+dev = [
     "nonebot2[fastapi]>=2.3.2",
     "nonebot-adapter-console>=0.6.0",
 ]

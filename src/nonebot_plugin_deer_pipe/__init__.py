@@ -1,17 +1,15 @@
-import json
-import os
-
-from .contants import USERDATA_PATH
+from .database import attend
 from .image import generate_image
+
 from datetime import datetime
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters, require
-from typing import Any, Sequence
 
 require("nonebot_plugin_alconna")
 from nonebot_plugin_alconna import UniMessage, on_alconna
 
 require("nonebot_plugin_userinfo")
 from nonebot_plugin_userinfo import EventUserInfo, UserInfo
+
 
 # Plugin meta
 __plugin_meta__: PluginMetadata = PluginMetadata(
@@ -24,34 +22,6 @@ __plugin_meta__: PluginMetadata = PluginMetadata(
     "nonebot_plugin_alconna", "nonebot_plugin_userinfo"
   )
 )
-
-# Attendance
-def attendance(now: datetime, user_id: str) -> tuple[bool, Sequence[int]]:
-  if not os.path.exists(USERDATA_PATH):
-    raw_data: str = "{}"
-  else:
-    with open(USERDATA_PATH) as f:
-      raw_data: str = f.read()
-  
-  data: dict[str, Any] = json.loads(raw_data)
-  userdata: dict[str, Any] | None = data.get(user_id)
-  if userdata == None:
-    userdata = { "year": now.year, "month": now.month, "deer": [] }
-    data[user_id] = userdata
-  
-  if userdata["year"] != now.year or userdata["month"] != now.month:
-    userdata = { "year": now.year, "month": now.month, "deer": [] }
-    data[user_id] = userdata
-  
-  if now.day in userdata["deer"]:
-    with open(USERDATA_PATH, "w") as f:
-      json.dump(data, f)
-    return (False, userdata["deer"])
-  
-  userdata["deer"].append(now.day)
-  with open(USERDATA_PATH, "w") as f:
-    json.dump(data, f)
-  return (True, userdata["deer"])
 
 # Matchers
 deer_matcher = on_alconna("🦌")
@@ -66,7 +36,7 @@ async def handle(user_info: UserInfo = EventUserInfo()) -> None:
   )
 
   now: datetime = datetime.now()
-  ok, deer = attendance(now, user_info.user_id)
+  ok, deer = await attend(now, user_info.user_id)
   img: bytes = generate_image(now, name, deer)
 
   await UniMessage.text(
