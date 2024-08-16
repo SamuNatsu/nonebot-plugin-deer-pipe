@@ -29,7 +29,9 @@ def get_seq(mask: int) -> list[int]:
   return ret
 
 async def attend(now: datetime, user_id: str) -> tuple[bool, Sequence[int]]:
+  global initialized
   if not initialized:
+    initialized = True
     async with engin.begin() as conn:
       await conn.run_sync(SQLModel.metadata.create_all)
 

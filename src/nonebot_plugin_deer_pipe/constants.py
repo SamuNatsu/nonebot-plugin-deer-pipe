@@ -1,5 +1,3 @@
-import os
-
 from PIL import Image, ImageFont
 from PIL.ImageFile import ImageFile
 from PIL.ImageFont import FreeTypeFont
@@ -11,7 +9,7 @@ import nonebot_plugin_localstore as store
 
 
 # Plugin paths
-PLUGIN_PATH: Path = Path(os.path.dirname(os.path.realpath(__file__)))
+PLUGIN_PATH: Path = Path(__file__).parent.resolve()
 ASSETS_PATH: Path = PLUGIN_PATH / "assets"
 
 # Images

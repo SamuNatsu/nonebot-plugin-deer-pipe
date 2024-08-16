@@ -495,7 +495,7 @@ files = [
 
 [[package]]
 name = "nonebot-plugin-alconna"
-version = "0.51.3"
+version = "0.51.4"
 requires_python = ">=3.9"
 summary = "Alconna Adapter for Nonebot"
 groups = ["default"]
@@ -509,8 +509,8 @@ dependencies = [
     "tarina>=0.5.5",
 ]
 files = [
-    {file = "nonebot_plugin_alconna-0.51.3-py3-none-any.whl", hash = "sha256:4451a494d9b1e997a2fbe669fda007e63f5e67af5b468072f0bd2204c8cee3d9"},
-    {file = "nonebot_plugin_alconna-0.51.3.tar.gz", hash = "sha256:e5d274cf005819da0829d07f300c72509284186ffedfd344677c15743dc49fa8"},
+    {file = "nonebot_plugin_alconna-0.51.4-py3-none-any.whl", hash = "sha256:9d31e537eb35e45a3753ad5d95dc0359f777269d6ce7e39fa74d515cad9a0981"},
+    {file = "nonebot_plugin_alconna-0.51.4.tar.gz", hash = "sha256:a43720a497c4fefb0da89e8d9996f8261bb0e92f70a991f2f4fd14c8ed628995"},
 ]
 
 [[package]]
