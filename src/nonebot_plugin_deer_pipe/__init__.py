@@ -57,7 +57,7 @@ async def _(
   day: int = result.main_args["day"]
   now: datetime = datetime.now()
 
-  if day < 0 or day >= now.day:
+  if day <= 0 or day >= now.day:
     await UniMessage.text(f"不是合法的补🦌日期捏").finish(reply_to=True)
 
   ok, deer = await reattend(now, day, user_info.user_id)
