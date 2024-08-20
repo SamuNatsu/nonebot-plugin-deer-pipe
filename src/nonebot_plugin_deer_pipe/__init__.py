@@ -36,9 +36,7 @@ async def handle(user_info: UserInfo = EventUserInfo()) -> None:
   )
 
   now: datetime = datetime.now()
-  ok, deer = await attend(now, user_info.user_id)
+  deer: dict[int, int] = await attend(now, user_info.user_id)
   img: bytes = generate_image(now, name, deer)
 
-  await UniMessage.text(
-      f"{name} 刚刚🦌了" if ok else f"{name} 今天已经🦌过了"
-    ).image(raw=img).send()
+  await UniMessage.text(f"{name} 刚刚🦌了").image(raw=img).send()

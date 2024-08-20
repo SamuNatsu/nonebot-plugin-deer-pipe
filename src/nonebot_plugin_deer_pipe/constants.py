@@ -13,7 +13,7 @@ PLUGIN_PATH: Path = Path(__file__).parent.resolve()
 ASSETS_PATH: Path = PLUGIN_PATH / "assets"
 
 # Images
-CHECK_IMG: ImageFile = Image.open(ASSETS_PATH / "check@96x100.png")
+CHECK_IMG: ImageFile    = Image.open(ASSETS_PATH / "check@96x100.png")
 DEERPIPE_IMG: ImageFile = Image.open(ASSETS_PATH / "deerpipe@100x82.png")
 
 # Fonts
@@ -23,5 +23,7 @@ MISANS_FONT: FreeTypeFont = ImageFont.truetype(
 )
 
 # Database
-DATABASE_PATH: Path = store.get_plugin_data_file("userdata.db")
-DATABASE_URL: str = f"sqlite+aiosqlite:///{DATABASE_PATH}"
+DATABASE_VERSION: int = 1
+DATABASE_NAME: str    = f"userdata-v{DATABASE_VERSION}.db"
+DATABASE_PATH: Path   = store.get_plugin_data_file(DATABASE_NAME)
+DATABASE_URL: str     = f"sqlite+aiosqlite:///{DATABASE_PATH}"

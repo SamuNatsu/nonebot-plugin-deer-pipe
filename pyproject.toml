@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-deer-pipe"
-version = "0.2.5"
+version = "0.3.0"
 description = "A deer-pipe attendance nonebot2 plugin"
 authors = [
     {name = "SNRainiar", email = "rainiar@foxmail.com"},
@@ -37,5 +37,5 @@ distribution = true
 [tool.pdm.dev-dependencies]
 dev = [
     "nonebot2[fastapi]>=2.3.2",
-    "nonebot-adapter-console>=0.6.0",
+    "nonebot-adapter-onebot>=2.4.4",
 ]

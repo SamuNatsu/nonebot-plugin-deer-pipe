@@ -1,18 +1,25 @@
+import uuid
+
 from .constants import DATABASE_URL
 
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
-from sqlmodel import Field, SQLModel, select
+from sqlmodel import Field, SQLModel, delete, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import Sequence
 
 
 # Model
 class User(SQLModel, table=True):
-  user_id: str = Field(primary_key=True)
+  id: str = Field(primary_key=True)
   year: int
   month: int
-  mask: int    = 0
+
+class UserDeer(SQLModel, table=True):
+  id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+  user_id: str  = Field(index=True)
+  day: int
+  count: int    = 0
 
 # Async engine
 engin: AsyncEngine = create_async_engine(DATABASE_URL)
@@ -28,7 +35,7 @@ def get_seq(mask: int) -> list[int]:
 
   return ret
 
-async def attend(now: datetime, user_id: str) -> tuple[bool, Sequence[int]]:
+async def attend(now: datetime, user_id: str) -> dict[int, int]:
   global initialized
   if not initialized:
     initialized = True
@@ -37,19 +44,32 @@ async def attend(now: datetime, user_id: str) -> tuple[bool, Sequence[int]]:
 
   async with AsyncSession(engin) as session:
     user: User | None = (
-      await session.exec(select(User).where(User.user_id == user_id))
+      await session.exec(select(User).where(User.id == user_id))
     ).one_or_none()
 
-    if user == None or user.year != now.year or user.month != now.month:
-      user = User(user_id=user_id, year=now.year, month=now.month)
-
-    if (user.mask >> (now.day - 1)) & 1 == 1:
-      return (False, get_seq(user.mask))
-    else:
-      user.mask |= (1 << (now.day - 1))
-
+    if user == None:
+      user = User(id=user_id, year=now.year, month=now.month)
       session.add(user)
-      await session.commit()
-      await session.refresh(user)
 
-      return (True, get_seq(user.mask))
+    if user.year != now.year or user.month != now.month:
+      await session.exec(delete(UserDeer).where(UserDeer.user_id == user_id))
+      user = User(user_id=user_id, year=now.year, month=now.month)
+      session.add(user)
+
+    user_deer: Sequence[UserDeer] = (
+      await session.exec(select(UserDeer).where(UserDeer.user_id == user_id))
+    ).all()
+
+    deer_map: dict[int, int] = dict([(i.day, i.count) for i in user_deer])
+
+    if now.day in deer_map:
+      deer_map[now.day] += 1
+      current: UserDeer = next(filter(lambda x: x.day == now.day, user_deer))
+      current.count += 1
+      session.add(current)
+    else:
+      deer_map[now.day] = 1
+      session.add(UserDeer(user_id=user.id, day=now.day, count=1))
+
+    await session.commit()
+    return deer_map
