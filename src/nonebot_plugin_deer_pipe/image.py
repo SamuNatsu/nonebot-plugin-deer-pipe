@@ -11,7 +11,7 @@ from pathlib import Path
 
 def generate_image(now: datetime, name: str, deer: dict[int, int]) -> bytes:
   cal: list[list[int]] = calendar.monthcalendar(now.year, now.month)
-  
+
   IMG_W, IMG_H = 700, 100 * (len(cal) + 1)
   BOX_W, BOX_H = 100, 100
 
@@ -32,15 +32,16 @@ def generate_image(now: datetime, name: str, deer: dict[int, int]) -> bytes:
         )
         if day in deer:
           img.paste(CHECK_IMG, (x0, y0), CHECK_IMG)
-          txt: str = "99+" if deer[day] > 99 else str(deer[day])
-          tlen: float = drw.textlength(txt, font=MISANS_FONT)
-          drw.text(
-            (x0 + BOX_W - tlen - 5, y0 + BOX_H - 35),
-            txt,
-            fill="red",
-            font=MISANS_FONT,
-            stroke_width=1
-          )
+          if deer[day] > 1:
+            txt: str = "x99+" if deer[day] > 99 else f"x{deer[day]}"
+            tlen: float = drw.textlength(txt, font=MISANS_FONT)
+            drw.text(
+              (x0 + BOX_W - tlen - 5, y0 + BOX_H - 35),
+              txt,
+              fill="red",
+              font=MISANS_FONT,
+              stroke_width=1
+            )
 
   drw.text((5, 5), f"{now.year}-{now.month:02} 签到", fill="black", font=MISANS_FONT)
   drw.text((5, 50), name, fill="black", font=MISANS_FONT)
