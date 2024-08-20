@@ -26,15 +26,6 @@ engin: AsyncEngine = create_async_engine(DATABASE_URL, echo=True)
 initialized: bool = False
 
 # Attendance
-def get_seq(mask: int) -> list[int]:
-  ret: list[int] = []
-  while mask > 0:
-    lb: int = mask & -mask
-    mask -= lb
-    ret.append(lb.bit_length())
-
-  return ret
-
 async def attend(now: datetime, user_id: str) -> dict[int, int]:
   global initialized
   if not initialized:
