@@ -18,7 +18,7 @@ DEERPIPE_IMG: ImageFile = Image.open(ASSETS_PATH / "deerpipe@100x82.png")
 
 # Fonts
 MISANS_FONT: FreeTypeFont = ImageFont.truetype(
-  ASSETS_PATH / "MiSans-Regular.ttf",
+  str(ASSETS_PATH / "MiSans-Regular.ttf"),
   25
 )
 
