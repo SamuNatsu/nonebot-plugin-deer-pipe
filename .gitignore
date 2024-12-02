@@ -1,0 +1,5 @@
+# Caches
+.ruff_cache
+
+# Environments
+.venv

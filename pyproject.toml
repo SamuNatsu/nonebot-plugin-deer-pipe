@@ -1,14 +1,39 @@
 [project]
 name = "nonebot-plugin-deer-pipe"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.4.0"
+description = "A deer-pipe attendance plugin for nonebot2"
 readme = "README.md"
 authors = [
     { name = "SNRainiar", email = "rainiar@foxmail.com" }
 ]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "aiosqlite>=0.20.0",
+    "nonebot-plugin-alconna>=0.54.0",
+    "nonebot-plugin-localstore>=0.7.2",
+    "nonebot-plugin-userinfo>=0.2.6",
+    "nonebot2>=2.4.0",
+    "pillow>=11.0.0",
+    "sqlmodel>=0.0.22",
+]
+license = {text = "AGPL-3.0-or-later"}
+classifiers = [
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3.10",
+    "Typing :: Typed"
+]
+
+[project.urls]
+Homepage = "https://github.com/SamuNatsu/nonebot-plugin-deer-pipe"
+Issues = "https://github.com/SamuNatsu/nonebot-plugin-deer-pipe/issues"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "nonebot-adapter-onebot>=2.4.6",
+    "nonebot2[fastapi]>=2.4.0",
+]
