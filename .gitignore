@@ -1,5 +1,6 @@
 # Caches
 .ruff_cache
+__pycache__
 
 # Environments
 .venv

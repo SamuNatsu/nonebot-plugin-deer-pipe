@@ -1,4 +1,8 @@
+# Load all needed plugins in advance
+from . import requirements as requirements
+
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
+
 
 # Plugin metadata
 __plugin_meta__: PluginMetadata = PluginMetadata(
