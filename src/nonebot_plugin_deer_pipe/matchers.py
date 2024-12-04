@@ -2,7 +2,6 @@ from .constants import PLUGIN_VERSION
 from .database import (
     attend,
     attend_past,
-    cleanup,
     get_avatar,
     update_avatar,
     get_deer_map,
@@ -37,7 +36,6 @@ deer_help: AlconnaMatcher = on_alconna(Alconna("🦌帮助"), aliases={"鹿帮�
 @deer.handle()
 async def _(target: Match[At], user_info: UserInfo = EventUserInfo()) -> None:
     now: datetime = datetime.now()
-    await cleanup(now)
 
     if target.available:
         user_id: str = target.result.target

@@ -3,6 +3,7 @@ from .constants import DATABASE_URL
 from base64 import b64encode, b64decode
 from contextlib import asynccontextmanager
 from datetime import datetime
+from nonebot_plugin_apscheduler import scheduler
 from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlmodel import Field, SQLModel, delete, select, update
@@ -44,7 +45,12 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 # Cleanup expired data
-async def cleanup(now: datetime) -> None:
+@scheduler.scheduled_job(
+    "cron", day_of_week="mon", hour=4, id="nonebot_plugin_deer_pipe_scheduler_cleanup"
+)
+async def cleanup() -> None:
+    now: datetime = datetime.now()
+
     async with get_session() as session:
         result: Sequence[Row[tuple[str]]] = (
             await session.execute(
