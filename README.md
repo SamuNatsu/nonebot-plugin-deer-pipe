@@ -8,6 +8,7 @@
 
 _✨ 每月🦌管签到 ✨_
 
+<a href="https://registry.nonebot.dev/plugin/nonebot-plugin-deer-pipe:nonebot_plugin_deer_pipe"><img src="https://img.shields.io/badge/nonebot2-registry-orange"></a>
 <a href="./LICENSE"><img src="https://img.shields.io/github/license/SamuNatsu/nonebot-plugin-deer-pipe.svg" alt="license"></a>
 <a href="https://pypi.python.org/pypi/nonebot-plugin-deer-pipe"><img src="https://img.shields.io/pypi/v/nonebot-plugin-deer-pipe.svg" alt="pypi"></a>
 <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="python">
