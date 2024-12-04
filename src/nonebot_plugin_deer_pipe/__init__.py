@@ -1,6 +1,9 @@
 # Load all needed plugins in advance
 from . import requirements as requirements
 
+# Load matchers
+from . import matchers as matchers
+
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 
 

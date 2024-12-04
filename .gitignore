@@ -1,6 +1,10 @@
 # Caches
-.ruff_cache
+/.ruff_cache
 __pycache__
 
 # Environments
-.venv
+/.env*
+/.venv
+
+# Tests
+/nonebot_plugin_deer_pipe

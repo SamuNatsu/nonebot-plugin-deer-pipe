@@ -2,7 +2,6 @@ import nonebot
 
 from nonebot.adapters.onebot.v11 import Adapter
 from nonebot.drivers import Driver
-from pathlib import Path
 
 
 # Framework initialize
@@ -15,7 +14,7 @@ driver.register_adapter(Adapter)
 
 # Load plugin
 try:
-    nonebot.load_plugin(Path("../src/nonebot_plugin_deer_pipe"))
+    nonebot.load_plugin("nonebot_plugin_deer_pipe")
 except Exception:
     pass
 
