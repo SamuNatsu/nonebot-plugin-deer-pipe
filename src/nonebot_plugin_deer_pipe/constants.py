@@ -1,29 +1,30 @@
-# constants.py
+import nonebot_plugin_localstore as localstore
 
+from PIL import Image, ImageFont
+from PIL.ImageFile import ImageFile
+from PIL.ImageFont import FreeTypeFont
+from importlib_metadata import version
 from pathlib import Path
-from PIL import Image, ImageFile, ImageFont
-from nonebot.plugin import require
 
-# 引入本地存储插件
-require("nonebot_plugin_localstore")
-import nonebot_plugin_localstore as store
 
-# 插件路径
+# Plugin info
 PLUGIN_PATH: Path = Path(__file__).parent.resolve()
+PLUGIN_VERSION: str = version("nonebot_plugin_deer_pipe")
+
+# Assets
 ASSETS_PATH: Path = PLUGIN_PATH / "assets"
-
-# 加载图片资源
-CHECK_IMG: ImageFile = Image.open(ASSETS_PATH / "check@96x100.png").convert("RGBA")
-DEERPIPE_IMG: ImageFile = Image.open(ASSETS_PATH / "deerpipe@100x82.png").convert("RGBA")
-
-# 加载字体
-MISANS_FONT: ImageFont.FreeTypeFont = ImageFont.truetype(
-    str(ASSETS_PATH / "MiSans-Regular.ttf"),
-    25
+ASSETS_FNT_MISANS: FreeTypeFont = ImageFont.truetype(
+    ASSETS_PATH / "MiSans-Regular.ttf", 25
 )
+ASSETS_IMG_CHECK: ImageFile = Image.open(ASSETS_PATH / "check@96x100.png").convert(
+    "RGBA"
+)
+ASSETS_IMG_DEERPIPE: ImageFile = Image.open(
+    ASSETS_PATH / "deerpipe@100x82.png"
+).convert("RGBA")
 
-# 数据库配置
-DATABASE_VERSION: int = 1
+# Database
+DATABASE_VERSION: int = 2
 DATABASE_NAME: str = f"userdata-v{DATABASE_VERSION}.db"
-DATABASE_PATH: Path = store.get_plugin_data_file(DATABASE_NAME)
+DATABASE_PATH: Path = localstore.get_plugin_data_file(DATABASE_NAME)
 DATABASE_URL: str = f"sqlite+aiosqlite:///{DATABASE_PATH}"

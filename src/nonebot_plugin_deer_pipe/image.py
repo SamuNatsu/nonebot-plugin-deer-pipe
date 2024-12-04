@@ -1,112 +1,74 @@
-# image.py
-
-import calendar
 import os
 import secrets
-from datetime import datetime
-from pathlib import Path
-from typing import List, Optional, Tuple
-
-from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
 
 from .constants import (
-    CHECK_IMG, DEERPIPE_IMG, MISANS_FONT, PLUGIN_PATH
+    ASSETS_FNT_MISANS,
+    ASSETS_IMG_CHECK,
+    ASSETS_IMG_DEERPIPE,
+    PLUGIN_PATH,
 )
-from .database import User, leaderboard
 
-
-# image.py
-
+from PIL import Image, ImageDraw
+from calendar import monthcalendar
+from datetime import datetime
 from io import BytesIO
+from pathlib import Path
 
-def generate_image(now: datetime, name: str, deer: dict[int, int], avatar: Optional[bytes]) -> bytes:
-    """
-    生成用户签到日历图片，并在指定位置添加用户头像
-    """
-    cal = calendar.monthcalendar(now.year, now.month)
 
-    IMG_W, IMG_H = 700, 100 * (len(cal) + 1)
+# Generate calendar image
+def generate_calendar(
+    now: datetime, deer_map: dict[int, int], avatar: bytes | None
+) -> bytes:
+    cld: list[list[int]] = monthcalendar(now.year, now.month)
+
+    IMG_W, IMG_H = 700, 100 * (len(cld) + 1)
     BOX_W, BOX_H = 100, 100
 
-    img = Image.new("RGBA", (IMG_W, IMG_H), "white")
-    drw = ImageDraw.Draw(img)
+    img: Image.Image = Image.new("RGBA", (IMG_W, IMG_H), "white")
+    drw: ImageDraw.ImageDraw = ImageDraw.Draw(img)
 
-    # 添加用户头像
-    if avatar:
-        avatar_img = Image.open(BytesIO(avatar)).convert("RGBA")
-        avatar_img = avatar_img.resize((80, 80))  # 调整头像大小
-        img.paste(avatar_img, (IMG_W - 90, 10), avatar_img)
+    if avatar is not None:
+        avatar_img: Image.Image = (
+            Image.open(BytesIO(avatar)).convert("RGBA").resize((80, 80))
+        )
+        img.paste(avatar_img, (10, 10))
 
-    for week_idx, week in enumerate(cal):
+    drw.text(
+        (100, 10),
+        f"{now.year}-{now.month:02} 签到日历",
+        fill="black",
+        font=ASSETS_FNT_MISANS,
+    )
+    for week_idx, week in enumerate(cld):
         for day_idx, day in enumerate(week):
-            x0 = day_idx * BOX_W
-            y0 = (week_idx + 1) * BOX_H
+            x0: int = day_idx * BOX_W
+            y0: int = (week_idx + 1) * BOX_H
             if day != 0:
-                img.paste(DEERPIPE_IMG, (x0, y0))
+                img.paste(ASSETS_IMG_DEERPIPE, (x0, y0))
                 drw.text(
                     (x0 + 5, y0 + BOX_H - 35),
                     str(day),
                     fill="black",
-                    font=MISANS_FONT
+                    font=ASSETS_FNT_MISANS,
                 )
-                if day in deer:
-                    img.paste(CHECK_IMG, (x0, y0), CHECK_IMG)
-                    if deer[day] > 1:
-                        txt = "x99+" if deer[day] > 99 else f"x{deer[day]}"
-                        tlen = drw.textlength(txt, font=MISANS_FONT)
+                if day in deer_map:
+                    img.paste(ASSETS_IMG_CHECK, (x0, y0), ASSETS_IMG_CHECK)
+                    if deer_map[day] > 1:
+                        txt = "x99+" if deer_map[day] > 99 else f"x{deer_map[day]}"
+                        tlen = drw.textlength(txt, font=ASSETS_FNT_MISANS)
                         drw.text(
                             (x0 + BOX_W - tlen - 5, y0 + BOX_H - 35),
                             txt,
                             fill="red",
-                            font=MISANS_FONT,
-                            stroke_width=1
+                            font=ASSETS_FNT_MISANS,
+                            stroke_width=1,
                         )
 
-    # 添加标题和用户名
-    drw.text((5, 5), f"{now.year}-{now.month:02} 签到", fill="black", font=MISANS_FONT)
-    drw.text((5, 50), name, fill="black", font=MISANS_FONT)
-
-    # 保存临时图片并读取为字节
-    img_path = PLUGIN_PATH / f"{secrets.token_hex()}.png"
+    img_path: Path = PLUGIN_PATH / f"{secrets.token_hex()}.png"
     img.save(img_path)
 
     with open(img_path, "rb") as f:
-        raw = f.read()
-    os.remove(img_path)
-
-    return raw
-
-
-def generate_leaderboard_image(now: Optional[int], user_names: List[Tuple[str, int, Optional[bytes]]]) -> bytes:
-    """
-    生成带有用户头像的排行榜图片
-    """
-    IMG_W, IMG_H = 900, 100 * (len(user_names) + 1)
-    BOX_H = 100
-
-    img = Image.new("RGBA", (IMG_W, IMG_H), "white")
-    drw = ImageDraw.Draw(img)
-
-    title = "总排行榜" if now is None else f"{now}月 排行榜"
-    drw.text((5, 5), title, fill="black", font=MISANS_FONT)
-
-    for idx, (name, count, avatar) in enumerate(user_names):
-        y0 = (idx + 1) * BOX_H
-        if avatar:
-            try:
-                avatar_img = Image.open(BytesIO(avatar)).convert("RGBA")
-                avatar_img = avatar_img.resize((80, 80))
-                img.paste(avatar_img, (5, y0 + 10), avatar_img)
-            except UnidentifiedImageError:
-                pass  # Optionally log the error or use a default image
-        drw.text((100, y0 + 5), f"#{idx + 1} {name}", fill="black", font=MISANS_FONT)
-        drw.text((100, y0 + 50), f"次数: {count}", fill="black", font=MISANS_FONT)
-
-    img_path = PLUGIN_PATH / f"{secrets.token_hex()}.png"
-    img.save(img_path)
-
-    with open(img_path, "rb") as f:
-        raw = f.read()
+        raw: bytes = f.read()
     os.remove(img_path)
 
     return raw
