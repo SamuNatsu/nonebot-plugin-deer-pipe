@@ -71,3 +71,7 @@ _✨ 每月🦌管签到 ✨_
 ### 指令表
 
 发送 `🦌帮助` 或 `鹿帮助` 以获取使用帮助
+
+## 💰 赞助
+
+<a href="https://www.buymeacoffee.com/snrainiar"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=snrainiar&button_colour=FF5F5F&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00" /></a>
