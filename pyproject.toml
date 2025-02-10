@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-deer-pipe"
-version = "0.4.1"
+version = "0.4.2"
 description = "A deer-pipe attendance plugin for nonebot2"
 readme = "README.md"
 authors = [

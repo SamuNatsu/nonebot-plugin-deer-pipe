@@ -1,11 +1,11 @@
 import os
+import nonebot_plugin_localstore as localstore
 import secrets
 
 from .constants import (
     ASSETS_FNT_MISANS,
     ASSETS_IMG_CHECK,
     ASSETS_IMG_DEERPIPE,
-    PLUGIN_PATH,
 )
 
 from PIL import Image, ImageDraw
@@ -64,7 +64,7 @@ def generate_calendar(
                             stroke_width=1,
                         )
 
-    img_path: Path = PLUGIN_PATH / f"{secrets.token_hex()}.png"
+    img_path: Path = localstore.get_plugin_cache_file(f"{secrets.token_hex()}.png")
     img.save(img_path)
 
     with open(img_path, "rb") as f:
