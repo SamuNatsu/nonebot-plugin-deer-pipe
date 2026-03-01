@@ -4,6 +4,7 @@ import secrets
 
 from .constants import (
     ASSETS_FNT_MISANS,
+    ASSETS_IMG_AVATAR,
     ASSETS_IMG_CHECK,
     ASSETS_IMG_DEERPIPE,
 )
@@ -36,8 +37,10 @@ def generate_calendar(
     img: Image.Image = Image.new("RGBA", (IMG_W, IMG_H), "white")
     drw: ImageDraw.ImageDraw = ImageDraw.Draw(img)
 
-    # Draw avatar if provided
-    if avatar is not None:
+    # Draw avatar
+    if avatar is None:
+        img.paste(ASSETS_IMG_AVATAR, (10, 10))
+    else:
         avatar_img: Image.Image = (
             Image.open(BytesIO(avatar)).convert("RGBA").resize((80, 80))
         )

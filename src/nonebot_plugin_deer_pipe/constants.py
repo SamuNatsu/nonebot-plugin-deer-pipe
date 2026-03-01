@@ -13,6 +13,9 @@ PLUGIN_VERSION: str = version("nonebot_plugin_deer_pipe")
 # Assets
 ASSETS_PATH: Path = PLUGIN_PATH / "assets"
 ASSETS_FNT_MISANS: FontManager = FontManager(ASSETS_PATH / "MiSans-Regular.ttf")
+ASSETS_IMG_AVATAR: Image.Image = Image.open(ASSETS_PATH / "akkarin@80x80.png").convert(
+    "RGBA"
+)
 ASSETS_IMG_CHECK: Image.Image = Image.open(ASSETS_PATH / "check@96x100.png").convert(
     "RGBA"
 )
