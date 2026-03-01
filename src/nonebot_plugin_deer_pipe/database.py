@@ -25,8 +25,8 @@ class UserDeer(SQLModel, table=True):
 
 
 # Initialize database engin
-engine: AsyncEngine = create_async_engine(DATABASE_URL, echo=True)
-initialized: bool = False
+_engine: AsyncEngine = create_async_engine(DATABASE_URL)
+_initialized: bool = False
 
 
 @asynccontextmanager
@@ -35,13 +35,14 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
     Get asynchronize database session
     """
     # Initialize engine
-    global initialized
-    if not initialized:
-        async with engine.begin() as conn:
+    global _initialized
+    if not _initialized:
+        async with _engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
+            _initialized = True
 
     # Create session
-    async with AsyncSession(engine) as session:
+    async with AsyncSession(_engine) as session:
         yield session
 
 
