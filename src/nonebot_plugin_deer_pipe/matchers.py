@@ -7,6 +7,7 @@ from .database import (
     get_deer_map,
 )
 from .image import generate_calendar
+from .utils import dl_img
 from datetime import datetime
 from nonebot_plugin_alconna import (
     Alconna,
@@ -16,7 +17,7 @@ from nonebot_plugin_alconna import (
     on_alconna,
 )
 from nonebot_plugin_alconna.uniseg import At, UniMessage
-from nonebot_plugin_userinfo import EventUserInfo, UserInfo
+from nonebot_plugin_uninfo import Uninfo
 
 
 # Matchers
@@ -29,25 +30,20 @@ deer_past: type[AlconnaMatcher] = on_alconna(
 deer_calendar: type[AlconnaMatcher] = on_alconna(
     Alconna("🦌历", Args["target?", At]), aliases={"鹿历"}
 )
-# deer_top: AlconnaMatcher = on_alconna(Alconna("🦌榜"), aliases={"鹿榜"})
 deer_help: type[AlconnaMatcher] = on_alconna(Alconna("🦌帮助"), aliases={"鹿帮助"})
 
 
 # Handlers
 @deer.handle()
-async def _(target: Match[At], user_info: UserInfo = EventUserInfo()) -> None:
+async def _(target: Match[At], session: Uninfo) -> None:
     now: datetime = datetime.now()
 
     if target.available:
         user_id: str = target.result.target
         avatar: bytes | None = await get_avatar(user_id)
     else:
-        user_id: str = user_info.user_id
-        avatar: bytes | None = (
-            await user_info.user_avatar.get_image()
-            if user_info.user_avatar is not None
-            else None
-        )
+        user_id: str = session.user.id
+        avatar: bytes | None = await dl_img(session.user.avatar)
         if avatar is not None:
             await update_avatar(user_id, avatar)
 
@@ -67,14 +63,10 @@ async def _(target: Match[At], user_info: UserInfo = EventUserInfo()) -> None:
 
 
 @deer_past.handle()
-async def _(day: Match[int], user_info: UserInfo = EventUserInfo()) -> None:
+async def _(day: Match[int], session: Uninfo) -> None:
     now: datetime = datetime.now()
-    user_id = user_info.user_id
-    avatar: bytes | None = (
-        await user_info.user_avatar.get_image()
-        if user_info.user_avatar is not None
-        else None
-    )
+    user_id: str = session.user.id
+    avatar: bytes | None = await dl_img(session.user.avatar)
     if avatar is not None:
         await update_avatar(user_id, avatar)
 
@@ -95,19 +87,15 @@ async def _(day: Match[int], user_info: UserInfo = EventUserInfo()) -> None:
 
 
 @deer_calendar.handle()
-async def _(target: Match[At], user_info: UserInfo = EventUserInfo()) -> None:
+async def _(target: Match[At], session: Uninfo) -> None:
     now: datetime = datetime.now()
 
     if target.available:
         user_id: str = target.result.target
         avatar: bytes | None = await get_avatar(user_id)
     else:
-        user_id: str = user_info.user_id
-        avatar: bytes | None = (
-            await user_info.user_avatar.get_image()
-            if user_info.user_avatar is not None
-            else None
-        )
+        user_id: str = session.user.id
+        avatar: bytes | None = await dl_img(session.user.avatar)
         if avatar is not None:
             await update_avatar(user_id, avatar)
 

@@ -18,6 +18,6 @@ __plugin_meta__: PluginMetadata = PluginMetadata(
         "nonebot_plugin_alconna",
         "nonebot_plugin_apscheduler",
         "nonebot_plugin_localstore",
-        "nonebot_plugin_userinfo",
+        "nonebot_plugin_uninfo",
     ),
 )

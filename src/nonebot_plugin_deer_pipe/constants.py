@@ -1,6 +1,6 @@
 import nonebot_plugin_localstore as localstore
 
-from .fontmgr import FontManager
+from .utils import FontManager
 from PIL import Image
 from importlib_metadata import version
 from pathlib import Path
