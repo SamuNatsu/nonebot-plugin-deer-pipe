@@ -1,11 +1,9 @@
 [project]
 name = "nonebot-plugin-deer-pipe"
-version = "0.4.2"
+version = "0.5.0"
 description = "A deer-pipe attendance plugin for nonebot2"
 readme = "README.md"
-authors = [
-    { name = "SNRainiar", email = "rainiar@foxmail.com" }
-]
+authors = [{ name = "SNRainiar", email = "rainiar@foxmail.com" }]
 requires-python = ">=3.10"
 dependencies = [
     "aiosqlite>=0.20.0",
@@ -17,12 +15,12 @@ dependencies = [
     "pillow>=11.0.0",
     "sqlmodel>=0.0.22",
 ]
-license = {text = "AGPL-3.0-or-later"}
+license = { text = "AGPL-3.0-or-later" }
 classifiers = [
     "Operating System :: OS Independent",
     "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Programming Language :: Python :: 3.10",
-    "Typing :: Typed"
+    "Typing :: Typed",
 ]
 
 [project.urls]
@@ -34,6 +32,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = [
-    "nonebot-adapter-console>=0.9.0",
-]
+dev = ["nonebot-adapter-console>=0.9.0"]
