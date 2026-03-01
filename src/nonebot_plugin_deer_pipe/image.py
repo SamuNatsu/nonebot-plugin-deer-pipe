@@ -7,7 +7,6 @@ from .constants import (
     ASSETS_IMG_CHECK,
     ASSETS_IMG_DEERPIPE,
 )
-
 from PIL import Image, ImageDraw
 from calendar import monthcalendar
 from datetime import datetime
