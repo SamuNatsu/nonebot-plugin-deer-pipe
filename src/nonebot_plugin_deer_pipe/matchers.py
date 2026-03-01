@@ -1,23 +1,11 @@
 from .constants import PLUGIN_VERSION
-from .database import (
-    attend,
-    attend_past,
-    get_avatar,
-    update_avatar,
-    get_deer_map,
-)
+from .database import attend, attend_past, get_deer_map
 from .image import generate_calendar
 from .utils import dl_img
 from datetime import datetime
-from nonebot_plugin_alconna import (
-    Alconna,
-    AlconnaMatcher,
-    Args,
-    Match,
-    on_alconna,
-)
+from nonebot_plugin_alconna import Alconna, AlconnaMatcher, Args, Match, on_alconna
 from nonebot_plugin_alconna.uniseg import At, UniMessage
-from nonebot_plugin_uninfo import Uninfo
+from nonebot_plugin_uninfo import Member, QryItrface, Uninfo
 
 
 # Matchers
@@ -35,17 +23,24 @@ deer_help: type[AlconnaMatcher] = on_alconna(Alconna("🦌帮助"), aliases={"�
 
 # Handlers
 @deer.handle()
-async def _(target: Match[At], session: Uninfo) -> None:
+async def _(target: Match[At], session: Uninfo, interface: QryItrface) -> None:
     now: datetime = datetime.now()
 
     if target.available:
         user_id: str = target.result.target
-        avatar: bytes | None = await get_avatar(user_id)
+        member: Member | None = await interface.get_member(
+            session.scene.type, session.scene.id, user_id
+        )
+        avatar: bytes | None = (
+            None
+            if member is None or member.user.avatar is None
+            else await dl_img(member.user.avatar)
+        )
     else:
         user_id: str = session.user.id
-        avatar: bytes | None = await dl_img(session.user.avatar)
-        if avatar is not None:
-            await update_avatar(user_id, avatar)
+        avatar: bytes | None = (
+            None if session.user.avatar is None else await dl_img(session.user.avatar)
+        )
 
     deer_map: dict[int, int] = await attend(user_id, now)
     img: bytes = generate_calendar(now, deer_map, avatar)
@@ -66,9 +61,9 @@ async def _(target: Match[At], session: Uninfo) -> None:
 async def _(day: Match[int], session: Uninfo) -> None:
     now: datetime = datetime.now()
     user_id: str = session.user.id
-    avatar: bytes | None = await dl_img(session.user.avatar)
-    if avatar is not None:
-        await update_avatar(user_id, avatar)
+    avatar: bytes | None = (
+        None if session.user.avatar is None else await dl_img(session.user.avatar)
+    )
 
     if day.result < 1 or day.result >= now.day:
         await UniMessage.text("不是合法的补🦌日期捏").finish(reply_to=True)
@@ -87,17 +82,24 @@ async def _(day: Match[int], session: Uninfo) -> None:
 
 
 @deer_calendar.handle()
-async def _(target: Match[At], session: Uninfo) -> None:
+async def _(target: Match[At], session: Uninfo, interface: QryItrface) -> None:
     now: datetime = datetime.now()
 
     if target.available:
         user_id: str = target.result.target
-        avatar: bytes | None = await get_avatar(user_id)
+        member: Member | None = await interface.get_member(
+            session.scene.type, session.scene.id, user_id
+        )
+        avatar: bytes | None = (
+            None
+            if member is None or member.user.avatar is None
+            else await dl_img(member.user.avatar)
+        )
     else:
         user_id: str = session.user.id
-        avatar: bytes | None = await dl_img(session.user.avatar)
-        if avatar is not None:
-            await update_avatar(user_id, avatar)
+        avatar: bytes | None = (
+            None if session.user.avatar is None else await dl_img(session.user.avatar)
+        )
 
     deer_map: dict[int, int] = await get_deer_map(user_id, now)
     img: bytes = generate_calendar(now, deer_map, avatar)
@@ -114,7 +116,6 @@ async def _() -> None:
         .text("[补🦌 x] 补🦌本月x日\n")
         .text("[🦌历] 看本月🦌日历\n")
         .text("[🦌历 @xxx] 看xxx的本月🦌日历\n")
-        # .text("[🦌榜] 看本月🦌排行榜\n")
         .text("[🦌帮助] 打开帮助\n\n")
         .text("* 以上命令中的“🦌”均可换成“鹿”字\n\n")
         .text("== 插件代码仓库 ==\n")
