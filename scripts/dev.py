@@ -1,12 +1,11 @@
 import nonebot
 
-from nonebot.adapters.onebot.v11 import Adapter
+from nonebot.adapters.console import Adapter
 from nonebot.drivers import Driver
 
 
 # Framework initialize
 nonebot.init()
-app = nonebot.get_asgi()
 
 # Driver
 driver: Driver = nonebot.get_driver()
@@ -20,4 +19,4 @@ except Exception:
 
 # Main entry
 if __name__ == "__main__":
-    nonebot.run(app="dev:app")
+    nonebot.run()
