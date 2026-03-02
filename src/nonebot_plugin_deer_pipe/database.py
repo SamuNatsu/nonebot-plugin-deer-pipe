@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from nonebot_plugin_apscheduler import scheduler
 from nonebot_plugin_uninfo import Session
-from sqlalchemy import tuple_
+from sqlalchemy import Row, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
-from sqlmodel import Field, Index, SQLModel, col, delete, func, select, update
+from sqlmodel import Field, Index, SQLModel, col, delete, func, update
 from uuid import UUID, uuid4
 from typing import AsyncGenerator, Sequence
 
@@ -74,35 +74,33 @@ async def cleanup() -> None:
         now: datetime = datetime.now()
 
         # Find expired deer data
-        res1: Sequence[tuple[str, str, str]] = (
-            (
-                await db.execute(
-                    select(UserDeer.adapter, UserDeer.scope, UserDeer.user_id)
-                    .distinct()
-                    .where(col(UserDeer.month) != now.month)
+        res1: Sequence[Row[tuple[str, str, str]]] = (
+            await db.execute(
+                select(
+                    col(UserDeer.adapter), col(UserDeer.scope), col(UserDeer.user_id)
                 )
+                .distinct()
+                .where(col(UserDeer.month) != now.month)
             )
-            .scalars()
-            .all()
-        )
-        set1: set[tuple[str, str, str]] = set(res1)  # Users who has expired deer data
+        ).all()
+        set1: set[tuple[str, str, str]] = {
+            i.tuple() for i in res1
+        }  # Users who has expired deer data
 
         # Cleanup expired deer data
         await db.execute(delete(UserDeer).where(col(UserDeer.month) != now.month))
 
         # Find active users from deer data
-        res2: Sequence[tuple[str, str, str]] = (
-            (
-                await db.execute(
-                    select(
-                        UserDeer.adapter, UserDeer.scope, UserDeer.user_id
-                    ).distinct()
-                )
+        res2: Sequence[Row[tuple[str, str, str]]] = (
+            await db.execute(
+                select(
+                    col(UserDeer.adapter),
+                    col(UserDeer.scope),
+                    col(UserDeer.user_id),
+                ).distinct()
             )
-            .scalars()
-            .all()
-        )
-        set2: set[tuple[str, str, str]] = set(res2)
+        ).all()
+        set2: set[tuple[str, str, str]] = {i.tuple() for i in res2}
 
         # Cleanup inactive users
         set3: set[tuple[str, str, str]] = set1 - set2
@@ -120,19 +118,15 @@ async def _get_deer_map(
     session: Session, db: AsyncSession, now: datetime, user_id: str
 ) -> dict[int, int]:
     # Fetch records
-    result: Sequence[tuple[int, int]] = (
-        (
-            await db.execute(
-                select(UserDeer.day, UserDeer.count)
-                .where(col(UserDeer.adapter) == session.adapter)
-                .where(col(UserDeer.scope) == session.scope)
-                .where(col(UserDeer.user_id) == user_id)
-                .where(col(UserDeer.month) == now.month)
-            )
+    result: Sequence[Row[tuple[int, int]]] = (
+        await db.execute(
+            select(col(UserDeer.day), col(UserDeer.count))
+            .where(col(UserDeer.adapter) == session.adapter)
+            .where(col(UserDeer.scope) == session.scope)
+            .where(col(UserDeer.user_id) == user_id)
+            .where(col(UserDeer.month) == now.month)
         )
-        .scalars()
-        .all()
-    )
+    ).all()
 
     # Return map
     return {i[0]: i[1] for i in result}
@@ -215,13 +209,17 @@ async def update_user(
     async with get_session() as db:
         # Fetch user
         user: User = (
-            await db.execute(
-                select(User)
-                .where(col(User.adapter) == session.adapter)
-                .where(col(User.scope) == session.scope)
-                .where(col(User.id) == user_id)
+            (
+                await db.execute(
+                    select(User)
+                    .where(col(User.adapter) == session.adapter)
+                    .where(col(User.scope) == session.scope)
+                    .where(col(User.id) == user_id)
+                )
             )
-        ).scalar_one()
+            .one()
+            .tuple()[0]
+        )
 
         # Update fields
         if not isinstance(can_be_helped, NotSet):
@@ -237,29 +235,25 @@ async def update_user(
 async def get_rank(session: Session, now: datetime) -> list[tuple[str, int]]:
     async with get_session() as db:
         # Fetch rank of top 5
-        rank: Sequence[tuple[str, int]] = (
-            (
-                await db.execute(
-                    select(UserDeer.user_id, func.sum(UserDeer.count))
-                    .where(col(UserDeer.adapter) == session.adapter)
-                    .where(col(UserDeer.scope) == session.scope)
-                    .where(
-                        col(UserDeer.user_id).in_(
-                            select(UserGroup.user_id)
-                            .where(col(UserGroup.adapter) == session.adapter)
-                            .where(col(UserGroup.scope) == session.scope)
-                            .where(col(UserGroup.group_id) == session.scene.id)
-                        )
+        res: Sequence[Row[tuple[str, int]]] = (
+            await db.execute(
+                select(col(UserDeer.user_id), func.sum(UserDeer.count))
+                .where(col(UserDeer.adapter) == session.adapter)
+                .where(col(UserDeer.scope) == session.scope)
+                .where(
+                    col(UserDeer.user_id).in_(
+                        select(col(UserGroup.user_id))
+                        .where(col(UserGroup.adapter) == session.adapter)
+                        .where(col(UserGroup.scope) == session.scope)
+                        .where(col(UserGroup.group_id) == session.scene.id)
                     )
-                    .where(col(UserDeer.month) == now.month)
-                    .group_by(UserDeer.user_id)
-                    .order_by(func.sum(UserDeer.count).desc())
-                    .limit(5)
                 )
+                .where(col(UserDeer.month) == now.month)
+                .group_by(UserDeer.user_id)
+                .order_by(func.sum(UserDeer.count).desc())
+                .limit(5)
             )
-            .scalars()
-            .all()
-        )
+        ).all()
 
         # Return rank
-        return list(rank)
+        return [i.tuple() for i in res]
