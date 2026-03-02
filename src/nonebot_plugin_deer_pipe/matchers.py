@@ -1,5 +1,5 @@
 from .constants import PLUGIN_VERSION
-from .database import attend, attend_past, get_deer_map
+from .database import check_in, get_deer_map
 from .image import generate_calendar
 from .utils import dl_img
 from datetime import datetime
@@ -23,9 +23,10 @@ deer_help: type[AlconnaMatcher] = on_alconna(Alconna("🦌帮助"), aliases={"�
 
 # Handlers
 @deer.handle()
-async def _(target: Match[At], session: Uninfo, interface: QryItrface) -> None:
+async def _(session: Uninfo, interface: QryItrface, target: Match[At]) -> None:
     now: datetime = datetime.now()
 
+    # Get user ID and avatar
     if target.available:
         user_id: str = target.result.target
         member: Member | None = await interface.get_member(
@@ -42,9 +43,11 @@ async def _(target: Match[At], session: Uninfo, interface: QryItrface) -> None:
             None if session.user.avatar is None else await dl_img(session.user.avatar)
         )
 
-    deer_map: dict[int, int] = await attend(user_id, now)
+    # Check in
+    _, deer_map = await check_in(session, now, user_id)
     img: bytes = generate_calendar(now, deer_map, avatar)
 
+    # Reply
     if target.available:
         await (
             UniMessage.text("成功帮")
@@ -58,19 +61,24 @@ async def _(target: Match[At], session: Uninfo, interface: QryItrface) -> None:
 
 
 @deer_past.handle()
-async def _(day: Match[int], session: Uninfo) -> None:
+async def _(session: Uninfo, day: Match[int]) -> None:
     now: datetime = datetime.now()
+
+    # Get user ID and avatar
     user_id: str = session.user.id
     avatar: bytes | None = (
         None if session.user.avatar is None else await dl_img(session.user.avatar)
     )
 
+    # Validate day
     if day.result < 1 or day.result >= now.day:
         await UniMessage.text("不是合法的补🦌日期捏").finish(reply_to=True)
 
-    ok, deer_map = await attend_past(user_id, now, day.result)
+    # Check in
+    ok, deer_map = await check_in(session, now, user_id, day.result)
     img: bytes = generate_calendar(now, deer_map, avatar)
 
+    # Reply
     if ok:
         await UniMessage.text("成功补🦌").image(raw=img).finish(reply_to=True)
     else:
@@ -82,9 +90,10 @@ async def _(day: Match[int], session: Uninfo) -> None:
 
 
 @deer_calendar.handle()
-async def _(target: Match[At], session: Uninfo, interface: QryItrface) -> None:
+async def _(session: Uninfo, interface: QryItrface, target: Match[At]) -> None:
     now: datetime = datetime.now()
 
+    # Get user ID and avatar
     if target.available:
         user_id: str = target.result.target
         member: Member | None = await interface.get_member(
@@ -101,9 +110,11 @@ async def _(target: Match[At], session: Uninfo, interface: QryItrface) -> None:
             None if session.user.avatar is None else await dl_img(session.user.avatar)
         )
 
-    deer_map: dict[int, int] = await get_deer_map(user_id, now)
+    # Get image
+    deer_map: dict[int, int] = await get_deer_map(session, now, user_id)
     img: bytes = generate_calendar(now, deer_map, avatar)
 
+    # Reply
     await UniMessage.image(raw=img).finish(reply_to=True)
 
 

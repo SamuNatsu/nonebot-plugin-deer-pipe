@@ -63,7 +63,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-@scheduler.scheduled_job(  # pyright: ignore[reportUnknownMemberType]
+@scheduler.scheduled_job(
     "cron", day_of_week="mon", hour=4, id="nonebot_plugin_deer_pipe_scheduler_cleanup"
 )
 async def cleanup() -> None:
