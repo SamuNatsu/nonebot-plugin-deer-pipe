@@ -3,8 +3,13 @@ import asyncio
 from PIL import ImageFont
 from aiocache import cached
 from aiohttp import ClientSession
+from enum import Enum, auto
 from nonebot.log import logger
 from pathlib import Path
+
+
+class NotSet(Enum):
+    NOT_SET = auto()
 
 
 class FontManager:

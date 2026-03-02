@@ -1,11 +1,11 @@
 from .constants import DATABASE_URL
-from base64 import b64encode, b64decode
+from .utils import NotSet
 from contextlib import asynccontextmanager
 from datetime import datetime
 from nonebot_plugin_apscheduler import scheduler
 from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
-from sqlmodel import Field, SQLModel, col, delete, select, update
+from sqlmodel import Field, SQLModel, col, delete, func, select, update
 from uuid import UUID, uuid4
 from typing import AsyncGenerator, Sequence
 
@@ -13,7 +13,13 @@ from typing import AsyncGenerator, Sequence
 # ORM models
 class User(SQLModel, table=True):
     user_id: str = Field(primary_key=True)
-    avatar: str | None
+    can_be_helped: bool = True
+    no_deer_until: datetime | None = None
+
+
+class UserGroup(SQLModel, table=True):
+    user_id: str = Field(primary_key=True)
+    group_id: str = Field(primary_key=True)
 
 
 class UserDeer(SQLModel, table=True):
@@ -53,27 +59,31 @@ async def cleanup() -> None:
     """
     Cleanup expired data
     """
-    now: datetime = datetime.now()
-
     async with get_session() as session:
+        now: datetime = datetime.now()
+
         # Find expired deer data
-        result: Sequence[Row[tuple[str]]] = (
-            await session.execute(
-                select(UserDeer.user_id)
-                .distinct()
-                .where(col(UserDeer.month) != now.month)
+        res1: Sequence[str] = (
+            (
+                await session.execute(
+                    select(UserDeer.user_id)
+                    .distinct()
+                    .where(col(UserDeer.month) != now.month)
+                )
             )
-        ).all()
-        set1: set[str] = {i[0] for i in result}  # Users who has expired deer data
+            .scalars()
+            .all()
+        )
+        set1: set[str] = {i[0] for i in res1}  # Users who has expired deer data
 
         # Cleanup expired deer data
         await session.execute(delete(UserDeer).where(col(UserDeer.month) != now.month))
 
         # Find active users from deer data
-        result: Sequence[Row[tuple[str]]] = (
+        res2: Sequence[Row[tuple[str]]] = (
             await session.execute(select(UserDeer.user_id).distinct())
         ).all()
-        set2: set[str] = {i[0] for i in result}
+        set2: set[str] = {i[0] for i in res2}
 
         # Cleanup inactive users
         set3: set[str] = set1 - set2
@@ -83,58 +93,27 @@ async def cleanup() -> None:
         await session.commit()
 
 
-async def get_avatar(user_id: str) -> bytes | None:
-    """
-    Get avatar by user ID
-
-    :param user_id: User ID
-    """
-    async with get_session() as session:
-        # Fetch avatar
-        result: Row[tuple[str | None]] | None = (
+async def _get_deer_map(
+    session: AsyncSession, now: datetime, user_id: str
+) -> dict[int, int]:
+    # Fetch records
+    result: Sequence[tuple[int, int]] = (
+        (
             await session.execute(
-                select(User.avatar).where(col(User.user_id) == user_id)
+                select(UserDeer.day, UserDeer.count)
+                .where(col(UserDeer.user_id) == user_id)
+                .where(col(UserDeer.month) == now.month)
             )
-        ).first()
+        )
+        .scalars()
+        .all()
+    )
 
-        # If user not found
-        if result is None:
-            return None
-
-        # If avatar not set
-        avatar: str | None = result[0]
-        if avatar is None:
-            return None
-
-        # Return image data
-        return b64decode(avatar)
+    # Return map
+    return {i[0]: i[1] for i in result}
 
 
-async def update_avatar(user_id: str, avatar: bytes) -> None:
-    """
-    Update user avatar
-
-    :param user_id: User ID
-    :param avatar: Avatar image bytes
-    """
-    async with get_session() as session:
-        # Find user
-        result: Row[tuple[User]] | None = (
-            await session.execute(select(User).where(User.user_id == user_id))
-        ).first()
-
-        # If user not exists
-        if result is None:
-            session.add(User(user_id=user_id, avatar=b64encode(avatar).decode()))
-        else:
-            result[0].avatar = b64encode(avatar).decode()
-            session.add(result[0])
-
-        # Commit transaction
-        await session.commit()
-
-
-async def get_deer_map(user_id: str, now: datetime) -> dict[int, int]:
+async def get_deer_map(now: datetime, user_id: str) -> dict[int, int]:
     """
     Get user deer map
 
@@ -142,36 +121,25 @@ async def get_deer_map(user_id: str, now: datetime) -> dict[int, int]:
     :param now: Current time
     """
     async with get_session() as session:
-        return await _get_deer_map(session, user_id, now)
+        return await _get_deer_map(session, now, user_id)
 
 
-async def _get_deer_map(
-    session: AsyncSession, user_id: str, now: datetime
-) -> dict[int, int]:
-    result: Sequence[Row[tuple[tuple[int, int]]]] = (
-        await session.execute(
-            select(UserDeer.day, UserDeer.count)
-            .where(col(UserDeer.user_id) == user_id)
-            .where(col(UserDeer.month) == now.month)
-        )
-    ).all()
-
-    return {i[0]: i[1] for i in result}
-
-
-async def attend(user_id: str, now: datetime) -> dict[int, int]:
+async def check_in(
+    now: datetime, user_id: str, day: int | None = None
+) -> tuple[bool, dict[int, int]]:
     """
     Attend
 
     :param user_id: User ID
     :param now: Current time
+    :param day: Past day of current month
     """
     async with get_session() as session:
         # Get deer map
-        deer_map: dict[int, int] = await _get_deer_map(session, user_id, now)
+        deer_map: dict[int, int] = await _get_deer_map(session, now, user_id)
 
-        # Update count
-        if now.day in deer_map:
+        # If check today && today is checked
+        if day is None and now.day in deer_map:
             deer_map[now.day] += 1
             await session.execute(
                 update(UserDeer)
@@ -180,39 +148,72 @@ async def attend(user_id: str, now: datetime) -> dict[int, int]:
                 .where(col(UserDeer.day) == now.day)
                 .values(count=deer_map[now.day])
             )
+            await session.commit()
+            return (True, deer_map)
+
+        # If check past && past is checked
+        elif day is not None and day in deer_map:
+            return (False, deer_map)
+
+        # If check today && today is not checked || check past and past is not checked
         else:
-            deer_map[now.day] = 1
-            session.add(UserDeer(user_id=user_id, month=now.month, day=now.day))
-
-        # Commit transaction
-        await session.commit()
-
-        # Return map
-        return deer_map
+            deer_map[day or now.day] = 1
+            session.add(UserDeer(user_id=user_id, month=now.month, day=day or now.day))
+            await session.commit()
+            return (True, deer_map)
 
 
-async def attend_past(
-    user_id: str, now: datetime, day: int
-) -> tuple[bool, dict[int, int]]:
+async def update_user(
+    user_id: str,
+    *,
+    can_be_helped: bool | NotSet = NotSet.NOT_SET,
+    no_deer_until: datetime | None | NotSet = NotSet.NOT_SET,
+):
     """
-    Attend past date
+    Update user fields
 
     :param user_id: User ID
-    :param now: Current time
-    :param day: Past day of current month
     """
-
     async with get_session() as session:
-        # Get deer map
-        deer_map: dict[int, int] = await _get_deer_map(session, user_id, now)
+        # Fetch user
+        user: User = (
+            await session.execute(select(User).where(col(User.user_id) == user_id))
+        ).scalar_one()
 
-        # Update count
-        if day in deer_map:
-            return (False, deer_map)
-        else:
-            deer_map[day] = 1
-            session.add(UserDeer(user_id=user_id, month=now.month, day=day))
-            await session.commit()
+        # Update fields
+        if not isinstance(can_be_helped, NotSet):
+            user.can_be_helped = can_be_helped
+        if not isinstance(no_deer_until, NotSet):
+            user.no_deer_until = no_deer_until
+        session.add(user)
 
-        # Success
-        return (True, deer_map)
+        # Update user
+        await session.commit()
+
+
+async def get_rank(now: datetime, group_id: str) -> list[tuple[str, int]]:
+    async with get_session() as session:
+        # Fetch rank of top 5
+        rank: Sequence[tuple[str, int]] = (
+            (
+                await session.execute(
+                    select(UserDeer.user_id, func.sum(UserDeer.count))
+                    .where(
+                        col(UserDeer.user_id).in_(
+                            select(UserGroup.user_id).where(
+                                col(UserGroup.group_id) == group_id
+                            )
+                        )
+                    )
+                    .where(col(UserDeer.month) == now.month)
+                    .group_by(UserDeer.user_id)
+                    .order_by(func.sum(UserDeer.count).desc())
+                    .limit(5)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+        # Return rank
+        return list(rank)
