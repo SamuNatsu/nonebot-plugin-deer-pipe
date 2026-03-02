@@ -24,7 +24,7 @@ ASSETS_IMG_DEERPIPE: Image.Image = Image.open(
 ).convert("RGBA")
 
 # Database
-DATABASE_VERSION: int = 2
+DATABASE_VERSION: int = 3
 DATABASE_NAME: str = f"userdata-v{DATABASE_VERSION}.db"
 DATABASE_PATH: Path = localstore.get_plugin_data_file(DATABASE_NAME)
 DATABASE_URL: str = f"sqlite+aiosqlite:///{DATABASE_PATH}"
