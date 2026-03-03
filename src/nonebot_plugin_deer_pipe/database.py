@@ -41,10 +41,7 @@ _initialized: bool = False
 
 
 @asynccontextmanager
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """
-    Get asynchronize database session
-    """
+async def _get_session() -> AsyncGenerator[AsyncSession, None]:
     # Initialize engine
     global _initialized
     if not _initialized:
@@ -64,7 +61,7 @@ async def _() -> None:
     """
     Cleanup expired data
     """
-    async with get_session() as db:
+    async with _get_session() as db:
         now: datetime = datetime.now()
 
         # Find expired deer data
@@ -94,7 +91,7 @@ async def _() -> None:
         await db.commit()
 
 
-async def _get_deer_map(db: AsyncSession, now: datetime, user: User) -> dict[int, int]:
+async def _get_records(db: AsyncSession, now: datetime, user: User) -> dict[int, int]:
     # Fetch records
     result: Sequence[Row[tuple[int, int]]] = (
         await db.execute(
@@ -114,8 +111,9 @@ async def get_user(session: Session, user_id: str) -> User:
 
     :param session: Uninfo session
     :param user_id: User ID
+    :return: User
     """
-    async with get_session() as db:
+    async with _get_session() as db:
         # Fetch user
         user: User | None = await db.scalar(
             select(User)
@@ -148,35 +146,37 @@ async def update_user(user: User) -> None:
 
     :param user: User
     """
-    async with get_session() as db:
+    async with _get_session() as db:
         db.add(user)
         await db.commit()
 
 
-async def get_deer_map(now: datetime, user: User) -> dict[int, int]:
+async def get_records(now: datetime, user: User) -> dict[int, int]:
     """
-    Get user deer map
+    Get user deer record map
 
     :param now: Current time
     :param user: User
+    :return: dict[day of month, count]
     """
-    async with get_session() as db:
-        return await _get_deer_map(db, now, user)
+    async with _get_session() as db:
+        return await _get_records(db, now, user)
 
 
 async def check_in(
     now: datetime, user: User, day: int | None = None
 ) -> tuple[bool, dict[int, int]]:
     """
-    Attend
+    Check in
 
     :param now: Current time
     :param user: User
     :param day: Past day of current month
+    :return: tuple[is success, dict[day of month, count]]
     """
-    async with get_session() as db:
+    async with _get_session() as db:
         # Get deer map
-        deer_map: dict[int, int] = await _get_deer_map(db, now, user)
+        deer_map: dict[int, int] = await _get_records(db, now, user)
 
         # If check today && today is checked
         if day is None and now.day in deer_map:
@@ -204,7 +204,14 @@ async def check_in(
 
 
 async def get_rank(session: Session, now: datetime) -> list[tuple[str, int]]:
-    async with get_session() as db:
+    """
+    Get rank
+
+    :param session: Uninfo session
+    :param now: Current time
+    :return: list[tuple[user ID, count]]
+    """
+    async with _get_session() as db:
         # Fetch rank of top 5
         res: Sequence[Row[tuple[int, str]]] = (
             await db.execute(

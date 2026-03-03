@@ -1,51 +1,70 @@
 from .constants import PLUGIN_VERSION
-from .database import check_in, get_deer_map
-from .image import generate_calendar
-from .utils import dl_img
-from datetime import datetime
+from .database import User, check_in, get_records, get_user, update_user
+from .image import gen_calendar, gen_rank
+from .utils import get_member_info, get_member_rank, get_user_info
+from datetime import datetime, timedelta
 from nonebot_plugin_alconna import Alconna, AlconnaMatcher, Args, Match, on_alconna
 from nonebot_plugin_alconna.uniseg import At, UniMessage
-from nonebot_plugin_uninfo import Member, QryItrface, Uninfo
+from nonebot_plugin_uninfo import QryItrface, Uninfo
+from pytimeparse import parse
+from typing import Literal
 
 
 # Matchers
-deer: type[AlconnaMatcher] = on_alconna(
+_deer: type[AlconnaMatcher] = on_alconna(
     Alconna("🦌", Args["target?", At]), aliases={"鹿"}
 )
-deer_past: type[AlconnaMatcher] = on_alconna(
+_deer_past: type[AlconnaMatcher] = on_alconna(
     Alconna("补🦌", Args["day", int]), aliases={"补鹿"}
 )
-deer_calendar: type[AlconnaMatcher] = on_alconna(
+_deer_calendar: type[AlconnaMatcher] = on_alconna(
     Alconna("🦌历", Args["target?", At]), aliases={"鹿历"}
 )
-deer_help: type[AlconnaMatcher] = on_alconna(Alconna("🦌帮助"), aliases={"鹿帮助"})
+_deer_rank: type[AlconnaMatcher] = on_alconna(Alconna("🦌榜"), aliases={"鹿榜"})
+_set_can_be_helped: type[AlconnaMatcher] = on_alconna(
+    Alconna("帮🦌", Args["can_be_helped", Literal["on", "off"]], Args["target?", At]),
+    aliases={"帮鹿"},
+)
+_set_no_deer_until: type[AlconnaMatcher] = on_alconna(
+    Alconna("禁🦌", Args["target", At], Args["duration?", str]), aliases={"禁鹿"}
+)
+_deer_help: type[AlconnaMatcher] = on_alconna(Alconna("🦌帮助"), aliases={"鹿帮助"})
 
 
 # Handlers
-@deer.handle()
+@_deer.handle()
 async def _(session: Uninfo, interface: QryItrface, target: Match[At]) -> None:
     now: datetime = datetime.now()
 
-    # Get user ID and avatar
+    # Skip non-group scene
+    if target.available and not (session.scene.is_channel or session.scene.is_group):
+        _deer.skip()
+
+    # Get user info
     if target.available:
         user_id: str = target.result.target
-        member: Member | None = await interface.get_member(
-            session.scene.type, session.scene.id, user_id
-        )
-        avatar: bytes | None = (
-            None
-            if member is None or member.user.avatar is None
-            else await dl_img(member.user.avatar)
-        )
+        name, avatar, user = await get_member_info(session, interface, user_id)
     else:
         user_id: str = session.user.id
-        avatar: bytes | None = (
-            None if session.user.avatar is None else await dl_img(session.user.avatar)
-        )
+        name, avatar, user = await get_user_info(session)
+
+    # If can't be helped
+    if target.available and not user.can_be_helped:
+        await UniMessage.text("该用户不准别人帮🦌捏").finish(reply_to=True)
+
+    # If no deer
+    if (
+        (session.scene.is_channel or session.scene.is_group)
+        and user.no_deer_until is not None
+        and user.no_deer_until > now
+    ):
+        await UniMessage.text(
+            f"该用户已被禁🦌至{user.no_deer_until.isoformat()}"
+        ).finish(reply_to=True)
 
     # Check in
-    _, deer_map = await check_in(session, now, user_id)
-    img: bytes = generate_calendar(now, deer_map, avatar)
+    _, deer_map = await check_in(now, user)
+    img: bytes = gen_calendar(now, deer_map, name, avatar)
 
     # Reply
     if target.available:
@@ -60,23 +79,20 @@ async def _(session: Uninfo, interface: QryItrface, target: Match[At]) -> None:
         await UniMessage.text("成功🦌了").image(raw=img).finish(reply_to=True)
 
 
-@deer_past.handle()
+@_deer_past.handle()
 async def _(session: Uninfo, day: Match[int]) -> None:
     now: datetime = datetime.now()
 
-    # Get user ID and avatar
-    user_id: str = session.user.id
-    avatar: bytes | None = (
-        None if session.user.avatar is None else await dl_img(session.user.avatar)
-    )
+    # Get user info
+    name, avatar, user = await get_user_info(session)
 
     # Validate day
     if day.result < 1 or day.result >= now.day:
         await UniMessage.text("不是合法的补🦌日期捏").finish(reply_to=True)
 
     # Check in
-    ok, deer_map = await check_in(session, now, user_id, day.result)
-    img: bytes = generate_calendar(now, deer_map, avatar)
+    ok, deer_map = await check_in(now, user, day.result)
+    img: bytes = gen_calendar(now, deer_map, name, avatar)
 
     # Reply
     if ok:
@@ -89,44 +105,144 @@ async def _(session: Uninfo, day: Match[int]) -> None:
         )
 
 
-@deer_calendar.handle()
+@_deer_calendar.handle()
 async def _(session: Uninfo, interface: QryItrface, target: Match[At]) -> None:
     now: datetime = datetime.now()
 
-    # Get user ID and avatar
+    # Skip non-group scene
+    if target.available and not (session.scene.is_channel or session.scene.is_group):
+        _deer_calendar.skip()
+
+    # Get user info
     if target.available:
         user_id: str = target.result.target
-        member: Member | None = await interface.get_member(
-            session.scene.type, session.scene.id, user_id
-        )
-        avatar: bytes | None = (
-            None
-            if member is None or member.user.avatar is None
-            else await dl_img(member.user.avatar)
-        )
+        name, avatar, user = await get_member_info(session, interface, user_id)
     else:
         user_id: str = session.user.id
-        avatar: bytes | None = (
-            None if session.user.avatar is None else await dl_img(session.user.avatar)
-        )
+        name, avatar, user = await get_user_info(session)
 
     # Get image
-    deer_map: dict[int, int] = await get_deer_map(session, now, user_id)
-    img: bytes = generate_calendar(now, deer_map, avatar)
+    deer_map: dict[int, int] = await get_records(now, user)
+    img: bytes = gen_calendar(now, deer_map, name, avatar)
 
     # Reply
     await UniMessage.image(raw=img).finish(reply_to=True)
 
 
-@deer_help.handle()
+@_deer_rank.handle()
+async def _(session: Uninfo, interface: QryItrface) -> None:
+    now: datetime = datetime.now()
+
+    # Skip non-group scene
+    if not (session.scene.is_channel or session.scene.is_group):
+        _deer_rank.skip()
+
+    # Get image
+    rank: list[tuple[str, bytes | None, int]] = await get_member_rank(
+        session, interface, now
+    )
+    img: bytes = gen_rank(rank)
+
+    # Reply
+    await UniMessage.image(raw=img).finish(reply_to=True)
+
+
+@_set_can_be_helped.handle()
+async def _(
+    session: Uninfo, can_be_helped: Match[Literal["on", "off"]], target: Match[At]
+) -> None:
+    # Skip non-group scene
+    if (
+        not (session.scene.is_channel or session.scene.is_group)
+        or session.member is None
+        or session.member.role is None
+    ):
+        _set_can_be_helped.skip()
+
+    # Validate admin
+    if target.available and session.member.role.level <= 1:
+        await UniMessage.text("权限不足").finish(reply_to=True)
+
+    # Get user info
+    user_id: str = target.result.target if target.available else session.user.id
+    user: User = await get_user(session, user_id)
+
+    # Update user
+    allowed: bool = can_be_helped.result == "on"
+    user.can_be_helped = allowed
+    await update_user(user)
+
+    # Reply
+    if target.available:
+        await (
+            UniMessage.text(f"已{'允许' if allowed else '禁止'}帮")
+            .at(user_id)
+            .text("🦌")
+            .finish(reply_to=True)
+        )
+    else:
+        await UniMessage.text(f"已{'允许' if allowed else '禁止'}帮🦌").finish(
+            reply_to=True
+        )
+
+
+@_set_no_deer_until.handle()
+async def _(session: Uninfo, target: Match[At], duration: Match[str]) -> None:
+    now: datetime = datetime.now()
+
+    # Skip non-group scene
+    if (
+        not (session.scene.is_channel or session.scene.is_group)
+        or session.member is None
+        or session.member.role is None
+    ):
+        _set_no_deer_until.skip()
+
+    # Validate admin
+    if session.member.role.level <= 1:
+        await UniMessage.text("权限不足").finish(reply_to=True)
+
+    # Validate duration
+    if duration.available and parse(duration.result) is None:
+        await UniMessage.text("时间段表达式解析错误").finish(reply_to=True)
+
+    # Get user info
+    user_id: str = target.result.target
+    user: User = await get_user(session, user_id)
+
+    # Update user
+    dur: int | float | None = parse(duration.result) if duration.available else None
+    until: datetime | None = None if dur is None else now + timedelta(seconds=dur)
+    user.no_deer_until = until
+    await update_user(user)
+
+    # Reply
+    if until is None:
+        await UniMessage.text("已解禁").at(user_id).text("的🦌权").finish(reply_to=True)
+    else:
+        await (
+            UniMessage.text("已禁止")
+            .at(user_id)
+            .text(f"的🦌权至{until.isoformat()}")
+            .finish(reply_to=True)
+        )
+
+
+@_deer_help.handle()
 async def _() -> None:
     await (
         UniMessage.text(f"== 🦌管插件 v{PLUGIN_VERSION} 帮助 ==\n")
         .text("[🦌] 🦌管1次\n")
-        .text("[🦌 @xxx] 帮xxx🦌管1次\n")
+        .text("[🦌 @xxx] 帮xxx🦌管1次（仅群组）\n")
         .text("[补🦌 x] 补🦌本月x日\n")
         .text("[🦌历] 看本月🦌日历\n")
-        .text("[🦌历 @xxx] 看xxx的本月🦌日历\n")
+        .text("[🦌历 @xxx] 看xxx的本月🦌日历（仅群组）\n")
+        .text("[🦌榜] 看本月本群🦌排行榜（仅群组）\n")
+        .text("[帮🦌 <on|off>] 禁止/允许别人帮🦌（仅群组）\n")
+        .text("[帮🦌 <on|off> @xxx] 禁止/允许别人帮xxx🦌（仅群组管理员）\n")
+        .text(
+            "[禁🦌 @xxx [yyy]] xxx接下来一段时间yyy内禁止🦌，不提供yyy时视为解禁（仅群组管理员，yyy为pytimeparse时间段表达式）\n"
+        )
         .text("[🦌帮助] 打开帮助\n\n")
         .text("* 以上命令中的“🦌”均可换成“鹿”字\n\n")
         .text("== 插件代码仓库 ==\n")
