@@ -1,40 +1,26 @@
 import nonebot_plugin_localstore as localstore
 
-from PIL import Image, ImageFont
+from .font import FontDraw
+from PIL import Image
 from importlib_metadata import version
 from pathlib import Path
 
 
-class FontManager:
-    def __init__(self, path: Path) -> None:
-        self.font: ImageFont.FreeTypeFont = ImageFont.truetype(path, 25)
-        self.cache: dict[int, ImageFont.FreeTypeFont] = {25: self.font}
-
-    def get(self, size: int = 25) -> ImageFont.FreeTypeFont:
-        if size not in self.cache:
-            self.cache[size] = self.font.font_variant(size=size)
-        return self.cache[size]
-
-
 # Plugin info
-PLUGIN_PATH: Path = Path(__file__).parent.resolve()
-PLUGIN_VERSION: str = version("nonebot_plugin_deer_pipe")
+PLUGIN_PATH = Path(__file__).parent.resolve()
+PLUGIN_VERSION = version("nonebot_plugin_deer_pipe")
 
 # Assets
-ASSETS_PATH: Path = PLUGIN_PATH / "assets"
-ASSETS_FNT_MISANS: FontManager = FontManager(ASSETS_PATH / "MiSans-Regular.ttf")
-ASSETS_IMG_AVATAR: Image.Image = Image.open(ASSETS_PATH / "akkarin@80x80.png").convert(
-    "RGBA"
+ASSETS_PATH = PLUGIN_PATH / "assets"
+ASSETS_FONT = FontDraw(
+    ASSETS_PATH / "MiSans-Regular.ttf", (ASSETS_PATH / "NotoColorEmoji.ttf", 109)
 )
-ASSETS_IMG_CHECK: Image.Image = Image.open(ASSETS_PATH / "check@96x100.png").convert(
-    "RGBA"
-)
-ASSETS_IMG_DEERPIPE: Image.Image = Image.open(
-    ASSETS_PATH / "deerpipe@100x82.png"
-).convert("RGBA")
+ASSETS_IMG_AVATAR = Image.open(ASSETS_PATH / "akkarin@80x80.png").convert("RGBA")
+ASSETS_IMG_CHECK = Image.open(ASSETS_PATH / "check@96x100.png").convert("RGBA")
+ASSETS_IMG_DEERPIPE = Image.open(ASSETS_PATH / "deerpipe@100x82.png").convert("RGBA")
 
 # Database
-DATABASE_VERSION: int = 3
-DATABASE_NAME: str = f"userdata-v{DATABASE_VERSION}.db"
-DATABASE_PATH: Path = localstore.get_plugin_data_file(DATABASE_NAME)
-DATABASE_URL: str = f"sqlite+aiosqlite:///{DATABASE_PATH}"
+DATABASE_VERSION = 3
+DATABASE_NAME = f"userdata-v{DATABASE_VERSION}.db"
+DATABASE_PATH = localstore.get_plugin_data_file(DATABASE_NAME)
+DATABASE_URL = f"sqlite+aiosqlite:///{DATABASE_PATH}"

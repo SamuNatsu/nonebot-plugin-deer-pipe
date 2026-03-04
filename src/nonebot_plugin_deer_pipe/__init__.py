@@ -8,7 +8,7 @@ from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 
 
 # Plugin metadata
-__plugin_meta__: PluginMetadata = PluginMetadata(
+__plugin_meta__ = PluginMetadata(
     name="🦌管签到",
     description="一个🦌管签到插件",
     usage="发送“🦌帮助”以查看插件命令",

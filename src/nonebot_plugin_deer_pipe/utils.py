@@ -9,7 +9,7 @@ from nonebot_plugin_uninfo import Member, QryItrface, Session
 
 
 @cached(ttl=86400)
-async def dl_img(url: str) -> bytes | None:
+async def dl_img(url: str):
     """
     Download image by URL with 1h caching
 
