@@ -781,7 +781,7 @@ wheels = [
 
 [[package]]
 name = "nonebot-plugin-deer-pipe"
-version = "0.6.0a2"
+version = "0.6.0a3"
 source = { editable = "." }
 dependencies = [
     { name = "aiocache" },
