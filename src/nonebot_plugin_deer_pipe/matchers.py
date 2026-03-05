@@ -10,7 +10,6 @@ from nonebot_plugin_uninfo import QryItrface, Uninfo
 from pytimeparse import parse
 from typing import Literal
 
-
 # Matchers
 _deer = on_alconna(Alconna("🦌", Args["target?", At]), aliases={"鹿"})
 _deer_past = on_alconna(Alconna("补🦌", Args["day", int]), aliases={"补鹿"})
@@ -182,6 +181,7 @@ async def _(
 @_set_no_deer_until.handle()
 async def _(session: Uninfo, target: Match[At], duration: Match[str]):
     now = datetime.now()
+    MAX_DURATION = 30 * 86400
 
     # Skip non-group scene
     if (
@@ -205,6 +205,14 @@ async def _(session: Uninfo, target: Match[At], duration: Match[str]):
 
     # Update user
     dur = parse(duration.result) if duration.available else None
+
+    # Validate dur
+    if dur is not None:
+        if dur > MAX_DURATION:
+            await UniMessage.text(
+                f"时间段过长：最大允许时间为 {MAX_DURATION // 86400} 天"
+            ).finish(reply_to=True)
+
     until = None if dur is None else now + timedelta(seconds=dur)
     user.no_deer_until = until
     await update_user(user)
