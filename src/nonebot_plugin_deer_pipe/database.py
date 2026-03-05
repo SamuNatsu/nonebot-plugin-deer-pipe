@@ -8,7 +8,6 @@ if TYPE_CHECKING:
 from .constants import DATABASE_URL
 from contextlib import asynccontextmanager
 from datetime import datetime
-from nonebot_plugin_apscheduler import scheduler
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlmodel import Field, Index, SQLModel, col, delete, func, update
@@ -59,13 +58,22 @@ async def _get_session():
         yield session
 
 
-@scheduler.scheduled_job(
-    "cron", day_of_week="mon", hour=4, id="nonebot_plugin_deer_pipe_scheduler_cleanup"
-)
-async def _():
-    """
-    Cleanup expired data
-    """
+async def _get_records(db: AsyncSession, now: datetime, user: User):
+    # Fetch records
+    result = (
+        await db.execute(
+            select(col(DeerRecord.day), col(DeerRecord.count))
+            .where(col(DeerRecord.user_uuid) == user.uuid)
+            .where(col(DeerRecord.month) == now.month)
+        )
+    ).all()
+
+    # Return map
+    return {i.tuple()[0]: i.tuple()[1] for i in result}
+
+
+async def cleanup():
+    """Cleanup expired data"""
     async with _get_session() as db:
         now = datetime.now()
 
@@ -92,20 +100,6 @@ async def _():
 
         # Commit trascation
         await db.commit()
-
-
-async def _get_records(db: AsyncSession, now: datetime, user: User):
-    # Fetch records
-    result = (
-        await db.execute(
-            select(col(DeerRecord.day), col(DeerRecord.count))
-            .where(col(DeerRecord.user_uuid) == user.uuid)
-            .where(col(DeerRecord.month) == now.month)
-        )
-    ).all()
-
-    # Return map
-    return {i.tuple()[0]: i.tuple()[1] for i in result}
 
 
 async def get_user(session: Session, user_id: str):

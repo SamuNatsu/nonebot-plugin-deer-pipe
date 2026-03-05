@@ -1,6 +1,7 @@
 from .constants import PLUGIN_VERSION
 from .database import check_in, get_records, get_user, update_user
 from .image import gen_calendar, gen_rank
+from .schedule import latest_version
 from .utils import get_member_info, get_member_rank, get_user_info
 from datetime import datetime, timedelta
 from nonebot_plugin_alconna import Alconna, Args, Match, on_alconna
@@ -239,5 +240,10 @@ async def _():
         .text("* 以上命令中的“🦌”均可换成“鹿”字\n\n")
         .text("== 插件代码仓库 ==\n")
         .text("https://github.com/SamuNatsu/nonebot-plugin-deer-pipe")
+        .text(
+            ""
+            if PLUGIN_VERSION == latest_version
+            else f"\n\n== 插件有新版本可用：v{latest_version} =="
+        )
         .finish(reply_to=True)
     )
