@@ -182,7 +182,7 @@ async def _(
 async def _(session: Uninfo, target: Match[At], duration: Match[str]):
     now = datetime.now()
     MAX_TIMESTAMP = 2147483647
-    
+
     # Skip non-group scene
     if (
         not (session.scene.is_channel or session.scene.is_group)
@@ -211,8 +211,10 @@ async def _(session: Uninfo, target: Match[At], duration: Match[str]):
     if until is not None:
         until_timestamp = int(until.timestamp())
         if until_timestamp > MAX_TIMESTAMP:
-            await UniMessage.text(f"时间戳溢出：设置时间已超过时间戳最大值").finish(reply_to=True)
-    
+            await UniMessage.text(f"时间戳溢出：设置时间已超过时间戳最大值").finish(
+                reply_to=True
+            )
+
     user.no_deer_until = until
     await update_user(user)
 
