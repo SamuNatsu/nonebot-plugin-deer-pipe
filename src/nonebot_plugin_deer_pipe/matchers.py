@@ -181,7 +181,7 @@ async def _(
 @_set_no_deer_until.handle()
 async def _(session: Uninfo, target: Match[At], duration: Match[str]):
     now = datetime.now()
-    MAX_TIMESTAMP = 2147483647
+    MAX_DURATION = 30 * 86400
 
     # Skip non-group scene
     if (
@@ -205,16 +205,15 @@ async def _(session: Uninfo, target: Match[At], duration: Match[str]):
 
     # Update user
     dur = parse(duration.result) if duration.available else None
-    until = None if dur is None else now + timedelta(seconds=dur)
 
     # Validate dur
-    if until is not None:
-        until_timestamp = int(until.timestamp())
-        if until_timestamp > MAX_TIMESTAMP:
-            await UniMessage.text(f"时间戳溢出：设置时间已超过时间戳最大值").finish(
-                reply_to=True
-            )
+    if dur is not None:
+        if dur > MAX_DURATION:
+            await UniMessage.text(
+                f"时间段过长：最大允许时间为 {MAX_DURATION // 86400} 天"
+            ).finish(reply_to=True)
 
+    until = None if dur is None else now + timedelta(seconds=dur)
     user.no_deer_until = until
     await update_user(user)
 
