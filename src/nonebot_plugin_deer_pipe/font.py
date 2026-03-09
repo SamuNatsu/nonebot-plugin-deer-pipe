@@ -2,12 +2,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from typing import Any
 
 
 from PIL import Image, ImageDraw, ImageFont
 from fontTools.ttLib import TTFont
-from pathlib import Path
 
 
 class FontManager:

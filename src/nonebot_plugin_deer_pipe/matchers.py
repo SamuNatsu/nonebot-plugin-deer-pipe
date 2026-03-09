@@ -1,7 +1,7 @@
 from .constants import PLUGIN_VERSION
 from .database import check_in, get_records, get_user, update_user
 from .image import gen_calendar, gen_rank
-from .schedule import latest_version
+from .schedule import get_latest_version
 from .utils import get_member_info, get_member_rank, get_user_info
 from datetime import datetime, timedelta
 from nonebot_plugin_alconna import Alconna, Args, Match, on_alconna
@@ -229,6 +229,7 @@ async def _(session: Uninfo, target: Match[At], duration: Match[str]):
 
 @_deer_help.handle()
 async def _():
+    latest_version = get_latest_version()
     await (
         UniMessage.text(f"== 🦌管插件 v{PLUGIN_VERSION} 帮助 ==\n")
         .text("[🦌] 🦌管1次\n")
@@ -249,7 +250,7 @@ async def _():
         .text(
             ""
             if PLUGIN_VERSION == latest_version
-            else f"\n\n== 插件有新版本可用：v{latest_version} =="
+            else f"\n\n* 有新版本可用：v{latest_version}"
         )
         .finish(reply_to=True)
     )

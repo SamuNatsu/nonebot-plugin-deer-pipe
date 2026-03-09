@@ -7,7 +7,12 @@ from nonebot.log import logger
 from nonebot_plugin_apscheduler import scheduler
 
 # Global variables
-latest_version = version("nonebot_plugin_deer_pipe")
+_latest_version = version("nonebot_plugin_deer_pipe")
+
+
+# Getter
+def get_latest_version():
+    return _latest_version
 
 
 # Jobs
@@ -16,7 +21,7 @@ latest_version = version("nonebot_plugin_deer_pipe")
 )
 async def _():
     """Fetch latest version"""
-    global latest_version
+    global _latest_version
 
     async with ClientSession() as session:
         for i in range(3):
@@ -26,7 +31,8 @@ async def _():
                 ) as resp:
                     resp.raise_for_status()
                     data = await resp.json()
-                    latest_version = data["info"]["version"]
+                    _latest_version = data["info"]["version"]
+                    logger.info(f"Latest version fetched: v{_latest_version}")
                     return
             except Exception as e:
                 logger.warning(f"Error fetching latest version, retry {i}/3: {e}")
@@ -39,3 +45,4 @@ async def _():
 )
 async def _():
     await cleanup()
+    logger.info("Database cleaned")
