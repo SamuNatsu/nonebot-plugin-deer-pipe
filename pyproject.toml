@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-deer-pipe"
-version = "0.6.1"
+version = "0.6.2"
 description = "A deer-pipe check in plugin for nonebot2"
 readme = "README.md"
 authors = [{ name = "SNRainiar", email = "rainiar@foxmail.com" }]
