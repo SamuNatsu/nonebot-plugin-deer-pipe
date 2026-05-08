@@ -71,7 +71,13 @@ async def get_member_info(session: Session, interface: QryItrface, user_id: str)
     :param user_id: User ID
     :return: tuple[name, avatar, User]
     """
-    member = await interface.get_member(session.scene.type, session.scene.id, user_id)
+    try:
+        member = await interface.get_member(
+            session.scene.type, session.scene.id, user_id
+        )
+    except Exception:
+        member = None
+
     name = (
         (None if member is None else member.nick)
         or (None if member is None else member.user.nick)
@@ -95,9 +101,13 @@ async def get_member_rank(session: Session, interface: QryItrface, now: datetime
     """
 
     async def get_info(user_id: str):
-        member = await interface.get_member(
-            session.scene.type, session.scene.id, user_id
-        )
+        try:
+            member = await interface.get_member(
+                session.scene.type, session.scene.id, user_id
+            )
+        except Exception:
+            member = None
+
         name = (
             (None if member is None else member.nick)
             or (None if member is None else member.user.nick)
