@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from pydantic import NaiveDatetime
 from sqlmodel import Field, Index, SQLModel, col, delete, func, update
 from uuid import UUID, uuid4
 
@@ -26,7 +27,9 @@ class User(SQLModel, table=True):
     scene_id: str
     user_id: str
     can_be_helped: bool = True
-    no_deer_until: datetime | None = None
+    # Naive local time. SQLModel >= 0.0.45 rejects naive values for plain
+    # `datetime` fields, so NaiveDatetime keeps the previous naive storage.
+    no_deer_until: NaiveDatetime | None = None
 
 
 class DeerRecord(SQLModel, table=True):
