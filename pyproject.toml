@@ -17,7 +17,7 @@ dependencies = [
     "nonebot2>=2.4.0",
     "pillow>=11.0.0",
     "pytimeparse>=1.1.8",
-    "sqlmodel>=0.0.22",
+    "sqlmodel>=0.0.45",
 ]
 license = { text = "AGPL-3.0-or-later" }
 classifiers = [
